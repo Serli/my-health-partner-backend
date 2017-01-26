@@ -47,10 +47,19 @@ class ExtractFeature(rdd : RDD[Vector]) {
 			var firstRDD  = filtered_y.filter(record => record > firstElement)
 			var secondRDD = filtered_y.filter(record => record < lastElement)
 
-			var product = firstRDD.zip(secondRDD)
+			var firstRDD_index = firstRDD.zipWithIndex().map(record => (record._2, record._1))
+			var secondRDD_index = secondRDD.zipWithIndex().map(record => (record._2, record._1))
+
+			var product = firstRDD_index.join(secondRDD_index)
+										.map(x => x._2)
+										.map(pair => pair._1 - pair._2)
+										.filter(value => value > 0)
+										.map(line => Vectors.dense(line))
+
+			/*var product = firstRDD.zip(secondRDD)
 								  .map(pair => pair._1 - pair._2)
 								  .filter(value => value > 0)
-								  .map(line => Vectors.dense(line))
+								  .map(line => Vectors.dense(line))*/
 
 			Statistics.colStats(product).mean.toArray(0)
 		} else {

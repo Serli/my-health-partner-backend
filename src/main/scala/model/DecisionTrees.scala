@@ -17,11 +17,11 @@ class DecisionTrees (trainingData : RDD[LabeledPoint], testData : RDD[LabeledPoi
 
 		val model = DecisionTree.trainClassifier(trainingData, numClasses, categoricalFeaturesInfo, impurity, maxDepth, maxBins)
 
-		model.save(sc, "actitracker")
+		// model.save(sc, "actitracker")
 
 		val predictionAndLabel = testData.map(p => (model.predict(p.features), p.label))
 
-		predictionAndLabel.filter(pl => pl._1 != pl._2).count / testData.count
+		predictionAndLabel.filter(pl => pl._1 != pl._2).count.toDouble / testData.count.toDouble
 	}
 
 }

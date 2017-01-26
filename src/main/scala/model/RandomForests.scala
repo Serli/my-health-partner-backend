@@ -21,7 +21,7 @@ class RandomForests (trainingData : RDD[LabeledPoint], testData : RDD[LabeledPoi
 	
 		val predictionAndLabel = testData.map(p => (model.predict(p.features), p.label))
 		
-		predictionAndLabel.filter(pl => pl._1 != pl._2).count / testData.count	
+		predictionAndLabel.filter(pl => pl._1 != pl._2).count.toDouble / testData.count.toDouble
 	}
 
 }
