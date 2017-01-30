@@ -41,10 +41,11 @@ public class DataDAOImpl implements DataDAO {
     public void open() {
     	try {
     		cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
+            session = cluster.connect("system");
     	} catch (Exception e) {
             cluster = Cluster.builder().addContactPoint("172.17.0.2").build();
+            session = cluster.connect("system");
 		}
-        session = cluster.connect("system");
         
         ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
         "WHERE keyspace_name = 'accelerometerdata';");
