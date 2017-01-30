@@ -9,6 +9,8 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import service.CompleteData;
@@ -18,7 +20,10 @@ import service.CompleteData;
  * @author nathan
  */
 
-public class DataDAOImpl implements DataDAO{
+public class DataDAOImpl implements DataDAO {
+	
+	private static final String CASSANDRA_URI_ENV_KEY = "CASSANDRAALIAS_PORT";
+	
     /**
      * The cluster that we are going to use to connect to the database
      */
@@ -36,7 +41,7 @@ public class DataDAOImpl implements DataDAO{
      */
     @Override
     public void open() {
-        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
+        cluster = Cluster.builder().addContactPoint(getCassandraURI()).build();
         session = cluster.connect("system");
         
         ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
@@ -138,5 +143,10 @@ public class DataDAOImpl implements DataDAO{
     public void deleteAllData() {
         String cqlStatementDeleteAllData = "TRUNCATE accelerometerdata.data;";
         session.execute(cqlStatementDeleteAllData);
+    }
+    
+    private String getCassandraURI() {
+    	String cassandraURI = System.getenv(CASSANDRA_URI_ENV_KEY);
+    	return (cassandraURI != null && !cassandraURI.isEmpty() ? cassandraURI : "127.0.0.1");
     }
 }
