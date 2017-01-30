@@ -1,0 +1,9 @@
+cassandra:
+    image: cassandra:latest
+
+spring:
+    build: spring
+    links:
+        - cassandra:cassandraalias
+    ports:
+        - 8081:8080
