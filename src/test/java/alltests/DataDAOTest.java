@@ -8,9 +8,13 @@ package alltests;
 import service.CompleteData;
 import dao.DataDAOImpl;
 import java.util.ArrayList;
+
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.util.Assert;
 
 /**
  *
@@ -23,11 +27,14 @@ public class DataDAOTest{
     
     @BeforeClass
     public static void beforeTests(){
-	dao = new DataDAOImpl();
-        dao.open();
+    	dao = new DataDAOImpl();
+    	Assert.notNull(dao);
+    	dao.createKeyspace();
+    	Assert.isTrue(dao.keyspaceExists());
+    	dao.open();
     }
     
-    @Test
+    @Before
     public void testInsertDAO(){
         
         cd = new CompleteData();
@@ -44,6 +51,7 @@ public class DataDAOTest{
         cd.setZ(1.0f);
         
         dao.addEntry(cd);
+        Assert.isTrue(!dao.isEmpty());
     }
     
     @Test
@@ -64,9 +72,10 @@ public class DataDAOTest{
         }
     }
     
-    @Test
+    @After
     public void testDeleteAllDataDAO(){
         dao.deleteAllData();
+        Assert.isTrue(dao.isEmpty());  
     }
     
     @AfterClass
