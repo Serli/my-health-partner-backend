@@ -5,23 +5,20 @@
  */
 package dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-
+import java.util.ArrayList;
+import java.util.List;
 import service.CompleteData;
 
 /**
- *
+ * Implementation of the interface which connects with the learning database
  * @author nathan
  */
 
-public class DataDAOImpl implements DataDAO {
-	
+public class DataDAOImpl implements DataDAO{
     /**
      * The cluster that we are going to use to connect to the database
      */
@@ -39,42 +36,8 @@ public class DataDAOImpl implements DataDAO {
      */
     @Override
     public void open() {
-    	try {
-    		cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-            session = cluster.connect("system");
-    	} catch (Exception e) {
-            cluster = Cluster.builder().addContactPoint("172.17.0.2").build();
-            session = cluster.connect("system");
-		}
-        
-        ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
-        "WHERE keyspace_name = 'accelerometerdata';");
-        
-        if (results.all().isEmpty()){
-            String cqlStatementKeyspace = "CREATE KEYSPACE accelerometerdata WITH " + 
-            "replication = {'class':'SimpleStrategy','replication_factor':1}";
-            session.execute(cqlStatementKeyspace);
-            
-            session = cluster.connect("accelerometerdata");
-            
-            String cqlStatementTable = "CREATE TABLE data (" + 
-                      " IMEI bigint, " +
-                      " height int, " + 
-                      " weight int, " + 
-                      " age int, " + 
-                      " gender int, " +
-                      " activity int, " + 
-                      " timestamp bigint, " + 
-                      " x float, " + 
-                      " y float, " +
-                      " z float, " +
-                      " PRIMARY KEY(IMEI, timestamp));";
-            
-            session.execute(cqlStatementTable);
-        }
-        else{
-            session = cluster.connect("accelerometerdata");
-        }
+        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();   
+        session = cluster.connect("accelerometerdata");
     }
 
     /**
@@ -106,6 +69,17 @@ public class DataDAOImpl implements DataDAO {
                 ", " + cp.getZ() +
                 ") IF NOT EXISTS;";
             session.execute(cqlStatementInsert);
+    }
+    
+    /**
+     * Indicates if the table data is empty or not
+     * @return A boolean which says if the table is empty
+     */
+    @Override
+    public boolean isEmpty() {
+        String cqlStatementGet = "SELECT * FROM data;";
+        ResultSet rs = session.execute(cqlStatementGet);
+        return rs.all().isEmpty();
     }
 
     /**
@@ -146,5 +120,50 @@ public class DataDAOImpl implements DataDAO {
     public void deleteAllData() {
         String cqlStatementDeleteAllData = "TRUNCATE accelerometerdata.data;";
         session.execute(cqlStatementDeleteAllData);
+    }
+
+    /**
+     * Creates the accelerometerdata keyspace
+     */
+    @Override
+    public void createKeyspace() {
+        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
+        session = cluster.connect("system");
+        
+        ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
+        "WHERE keyspace_name = 'accelerometerdata';");
+        
+        if (results.all().isEmpty()){
+            String cqlStatementKeyspace = "CREATE KEYSPACE accelerometerdata WITH " + 
+            "replication = {'class':'SimpleStrategy','replication_factor':1}";
+            session.execute(cqlStatementKeyspace);
+            
+            session = cluster.connect("accelerometerdata");
+            
+            String cqlStatementTable = "CREATE TABLE data (" + 
+                      " IMEI bigint, " +
+                      " height int, " + 
+                      " weight int, " + 
+                      " age int, " + 
+                      " gender int, " +
+                      " activity int, " + 
+                      " timestamp bigint, " + 
+                      " x float, " + 
+                      " y float, " +
+                      " z float, " +
+                      " PRIMARY KEY(IMEI, timestamp));";
+            
+            session.execute(cqlStatementTable);
+        }
+        cluster.close();
+    }
+    
+    public boolean keyspaceExists(){
+        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
+        session = cluster.connect("system");
+        
+        ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
+        "WHERE keyspace_name = 'accelerometerdata';");
+        return (!results.all().isEmpty());
     }
 }

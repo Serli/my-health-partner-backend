@@ -6,7 +6,7 @@
 package service;
 
 /**
- *
+ * Class which represents data sent by the developer application
  * @author nathan
  */
 public class CompleteData {

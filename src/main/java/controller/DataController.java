@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- *
+ * Controller which receives data sent by the developer application
+ * Then, it stores it in the learning database
  * @author kawther D
  */
 
