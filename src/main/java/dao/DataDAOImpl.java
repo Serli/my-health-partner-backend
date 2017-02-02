@@ -90,7 +90,7 @@ public class DataDAOImpl implements DataDAO{
      */
     @Override
     public ArrayList<CompleteData> getData(int imei) {
-        ArrayList<CompleteData> dataList = new ArrayList();
+        ArrayList<CompleteData> dataList = new ArrayList<CompleteData>();
         String cqlStatementGet = "SELECT * FROM data WHERE IMEI = " + imei + ";";
         ResultSet rs = session.execute(cqlStatementGet);
         List<Row> listRow = rs.all();
