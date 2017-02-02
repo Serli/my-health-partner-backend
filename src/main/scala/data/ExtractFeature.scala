@@ -1,6 +1,7 @@
 package data
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkException
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
 
@@ -39,6 +40,8 @@ class ExtractFeature(rdd : RDD[Vector]) {
 		var filtered_y = data.filter(record => record(1) > 0.9 * max(1))
 						 .map(record => record(0))
 						 .sortBy(time => time, true, 1)
+		
+		var result = 0.0
 
 		if(filtered_y.count > 1) {
 			var firstElement = filtered_y.first
@@ -46,25 +49,33 @@ class ExtractFeature(rdd : RDD[Vector]) {
 
 			var firstRDD  = filtered_y.filter(record => record > firstElement)
 			var secondRDD = filtered_y.filter(record => record < lastElement)
+			
+			try {
+				var product = firstRDD.zip(secondRDD)
+						      .map(pair => pair._1 - pair._2)
+						      .filter(value => value > 0)
+						      .map(line => Vectors.dense(line))
 
-			var firstRDD_index = firstRDD.zipWithIndex().map(record => (record._2, record._1))
-			var secondRDD_index = secondRDD.zipWithIndex().map(record => (record._2, record._1))
+				if(product.count > 0)
+	                                result = Statistics.colStats(product).mean.toArray(0)
+			} catch {
+				case se : SparkException => {
+					var firstRDD_index = firstRDD.zipWithIndex().map(record => (record._2, record._1))
+					var secondRDD_index = secondRDD.zipWithIndex().map(record => (record._2, record._1))
 
-			var product = firstRDD_index.join(secondRDD_index)
-										.map(x => x._2)
-										.map(pair => pair._1 - pair._2)
-										.filter(value => value > 0)
-										.map(line => Vectors.dense(line))
+					var product = firstRDD_index.join(secondRDD_index)
+								.sortBy(pair => pair._1, true, 1)
+								.map(pair => pair._2)
+								.map(pair => pair._1 - pair._2)
+								.filter(value => value > 0)
+								.map(line => Vectors.dense(line))
 
-			/*var product = firstRDD.zip(secondRDD)
-								  .map(pair => pair._1 - pair._2)
-								  .filter(value => value > 0)
-								  .map(line => Vectors.dense(line))*/
-
-			Statistics.colStats(product).mean.toArray(0)
-		} else {
-			0.0
-		}
+					if(product.count > 0)
+		                                result = Statistics.colStats(product).mean.toArray(0)
+				}
+			}
+		} 
+		result
 	}
 
 }

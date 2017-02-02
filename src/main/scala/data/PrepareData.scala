@@ -1,6 +1,7 @@
 package data
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkException
 
 object PrepareData {
 
@@ -9,23 +10,30 @@ object PrepareData {
 		var firstRDD  = timestamps.filter(record => record > firstElement)
 		var secondRDD = timestamps.filter(record => record < lastElement )
 
-		var firstRDD_index  = firstRDD.zipWithIndex().map(record => (record._2,record._1))
-		var secondRDD_index = secondRDD.zipWithIndex().map(record => (record._2,record._1))
+		try {
+        	        var result = firstRDD.zip(secondRDD)
+	                        	     .map(pair => (Array(pair._1, pair._2), pair._1 - pair._2))
+			
+			result.count
 
-		firstRDD_index.join(secondRDD_index)
-					  .map(pair => pair._2)
-					  .map(pair => (Array(pair._1, pair._2), pair._1 - pair._2))
+			result
+		} catch {
+			case se : SparkException => {
+		                var firstRDD_index  = firstRDD.zipWithIndex().map(record => (record._2,record._1))
+		                var secondRDD_index = secondRDD.zipWithIndex().map(record => (record._2,record._1))
 
-		// firstRDD.zip(secondRDD)
-		// 		.map(pair => (Array(pair._1, pair._2), pair._1 - pair._2))
+				firstRDD_index.join(secondRDD_index)
+					      .sortBy(pair => pair._1, true, 1)
+					      .map(pair => pair._2)
+					      .map(pair => (Array(pair._1, pair._2), pair._1 - pair._2))
+			}
+		}
 	}
 
 	def defineJump(tsBoundaries : RDD[(Array[Long], Long)]) : RDD[(Long, Long)] = {
 
-		var result = tsBoundaries.filter(pair => pair._2 > 100000000)
+		tsBoundaries.filter(pair => pair._2 > 100000000)
 					.map(pair => (pair._1(1), pair._1(0)))
-
-		result
 	}
 
 	def defineInterval(tsJump : RDD[(Long, Long)], firstElement : Long, lastElement : Long, windows : Long) : List[Array[Long]] = {

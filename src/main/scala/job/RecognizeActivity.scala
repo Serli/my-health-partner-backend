@@ -33,10 +33,13 @@ object RecognizeActivity {
 		var labeledPoints : List[LabeledPoint] = List()
 
         val userIds = rdd.map(record => record._1)
+			 .distinct
+			 .sortBy(id => id, true, 1)
                          .collect
 
-		// for( i <- userIds) {
-        for( i <- 1 to 1) {
+	for( i <- userIds) {
+        // for( i <- 1 to 10) {
+		System.err.println("Traitement de l'user "+i)
 			for( activity <- activities) {
 			  	val times : RDD[Long] = rdd.filter(record => record._1 == i && record._2 == activity)
                                            .map(record => record._3)
