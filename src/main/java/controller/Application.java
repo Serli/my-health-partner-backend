@@ -20,7 +20,9 @@ public class Application {
 
     public static void main(String[] args) {
         DataDAOImpl dao = new DataDAOImpl();
+        dao.open();
         dao.createKeyspace();
+        dao.close();
         SpringApplication.run(Application.class, args);
     }
 }

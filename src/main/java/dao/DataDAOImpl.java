@@ -36,8 +36,13 @@ public class DataDAOImpl implements DataDAO{
      */
     @Override
     public void open() {
-        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();   
-        session = cluster.connect("accelerometerdata");
+    	try {
+    		cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
+            session = cluster.connect("system");
+    	} catch (Exception e) {
+            cluster = Cluster.builder().addContactPoint("172.17.0.2").build();
+            session = cluster.connect("system");
+		}
     }
 
     /**
@@ -127,9 +132,6 @@ public class DataDAOImpl implements DataDAO{
      */
     @Override
     public void createKeyspace() {
-        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-        session = cluster.connect("system");
-        
         ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
         "WHERE keyspace_name = 'accelerometerdata';");
         
@@ -155,13 +157,9 @@ public class DataDAOImpl implements DataDAO{
             
             session.execute(cqlStatementTable);
         }
-        cluster.close();
     }
     
     public boolean keyspaceExists(){
-        cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-        session = cluster.connect("system");
-        
         ResultSet results = session.execute("SELECT * FROM system_schema.keyspaces " +
         "WHERE keyspace_name = 'accelerometerdata';");
         return (!results.all().isEmpty());
