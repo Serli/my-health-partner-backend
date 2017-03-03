@@ -56,12 +56,9 @@ object ComputeFeature {
 
     val end = times.sortBy(time => time, false, 1).first
 
-    System.err.println("getFeatureFromJava from " + begin + " to " + end)
-
     var features: List[Vector] = List()
 
     for (i <- begin + 5000L until end by 5000L) {
-      System.err.println("Compute feature from " + (i - 5000L) + " to " + i)
       val interval = data.filter(entry => (i - 5000L) <= entry._1 && entry._1 < i)
         .sortBy(entry => entry._1, true, 1)
 

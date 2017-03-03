@@ -104,13 +104,11 @@ object CreateModel {
     }
 
     var decisionTrees: DecisionTreeModel = null
-    //        var randomForests : RandomForests
+    // var randomForests : RandomForests
 
     if (labeledPoints.nonEmpty) {
 
       val trainingData = sc.parallelize(labeledPoints)
-
-      System.err.println("Training data size = " + trainingData.count())
 
       decisionTrees = new DecisionTrees(trainingData).createModel()
       // randomForests = new RandomForests(trainingData).createModel()

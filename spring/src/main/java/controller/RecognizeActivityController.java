@@ -34,16 +34,15 @@ public class RecognizeActivityController {
      * @return the MLlib model
      */
     private static DecisionTreeModel loadModel() {
-        DecisionTreeModel m = CreateModel.createModelFromRaw();
-        /*try {
+        DecisionTreeModel m = null;
+        try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream("/data/model/DecisionTree.model"));
             m = (DecisionTreeModel) ois.readObject();
         } catch (IOException e) {
-            System.err.println("model file not found, create a new model");
             m = CreateModel.createModel();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        }*/
+        }
         return m;
     }
 
