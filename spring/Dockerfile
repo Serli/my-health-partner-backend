@@ -2,7 +2,7 @@ FROM maven:3.3-jdk-8-alpine
 MAINTAINER salquier
 
 COPY pom.xml /app/
-COPY src /app/
+COPY src /app/src/
 
 RUN cd /app && \
     mvn package -DskipTests -q -B && \
