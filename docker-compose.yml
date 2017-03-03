@@ -1,0 +1,14 @@
+cassandra:
+    image: cassandra:latest
+    volumes:
+        - ./data/bd:/var/lib/cassandra
+
+spring:
+    build: spring
+    links:
+        - cassandra:cassandra_spring
+    ports:
+        - 80:8080
+    volumes:
+        - ./data/model:/data/model
+        - ./data/log:/var/log
