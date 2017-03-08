@@ -58,17 +58,19 @@ object ComputeFeature {
 
     var features: List[Vector] = List()
 
-    for (i <- begin + 5000L until end by 5000L) {
+    for (i <- begin + 5000L until end + 100 by 5000L) {
       val interval = data.filter(entry => (i - 5000L) <= entry._1 && entry._1 < i)
         .sortBy(entry => entry._1, true, 1)
 
       val doubles = interval.map(entry => Array(entry._2.toDouble, entry._3.toDouble, entry._4.toDouble))
 
-      val timestamp = interval.map(entry => Array(entry._1, entry._2.toLong))
+      if(doubles.count() > 0) {
+        val timestamp = interval.map(entry => Array(entry._1, entry._2.toLong))
 
-      var feature = getFeatureVector(doubles, timestamp)
+        var feature = getFeatureVector(doubles, timestamp)
 
-      features :+= feature
+        features :+= feature
+      }
     }
 
     sc.parallelize(features)
