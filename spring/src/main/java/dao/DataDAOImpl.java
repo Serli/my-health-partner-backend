@@ -191,7 +191,7 @@ public class DataDAOImpl implements DataDAO {
      */
     @Override
     public void deleteData(int imei) {
-        String cql = "DELETE FROM data WHERE imei = " + imei + ";";
+        String cql = "DELETE * FROM accelerometerdata.data WHERE imei = " + imei + ";";
         session.execute(cql);
     }
 
