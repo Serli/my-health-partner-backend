@@ -24,5 +24,7 @@ public interface DataDAO {
 
     void deleteAllData();
 
+    void deleteData(int imei);
+
     void deleteAllFeature();
 }

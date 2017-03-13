@@ -186,6 +186,16 @@ public class DataDAOImpl implements DataDAO {
     }
 
     /**
+     * Delete the data corresponding to the imei.
+     * @param imei the user imei
+     */
+    @Override
+    public void deleteData(int imei) {
+        String cql = "DELETE * FROM data WHERE imei = " + imei + ";";
+        session.execute(cql);
+    }
+
+    /**
      * Delete all data in the data table.
      */
     @Override
