@@ -58,8 +58,8 @@ object ComputeFeature {
 
     var features: List[Vector] = List()
 
-    for (i <- begin + 5000L until end + 100 by 5000L) {
-      val interval = data.filter(entry => (i - 5000L) <= entry._1 && entry._1 < i)
+    for (i <- begin until end-2500L by 5000L) {
+      val interval = data.filter(entry => i <= entry._1 && entry._1 < (i + 5000L))
         .sortBy(entry => entry._1, true, 1)
 
       val doubles = interval.map(entry => Array(entry._2.toDouble, entry._3.toDouble, entry._4.toDouble))
