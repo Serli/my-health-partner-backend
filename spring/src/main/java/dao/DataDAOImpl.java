@@ -110,7 +110,7 @@ public class DataDAOImpl implements DataDAO {
      */
     @Override
     public boolean isEmpty() {
-        String cqlStatementGet = "SELECT * FROM data;";
+        String cqlStatementGet = "SELECT * FROM accelerometerdata.data;";
         ResultSet rs = session.execute(cqlStatementGet);
         return rs.all().isEmpty();
     }
@@ -124,7 +124,7 @@ public class DataDAOImpl implements DataDAO {
     @Override
     public List<CompleteData> getData(int imei) {
         ArrayList<CompleteData> dataList = new ArrayList<CompleteData>();
-        String cqlStatementGet = "SELECT * FROM data WHERE imei = " + imei + ";";
+        String cqlStatementGet = "SELECT * FROM accelerometerdata.data WHERE imei = " + imei + ";";
         ResultSet rs = session.execute(cqlStatementGet);
         List<Row> listRow = rs.all();
 
@@ -155,7 +155,7 @@ public class DataDAOImpl implements DataDAO {
     @Override
     public List<FeatureData> getFeature(int imei) {
         ArrayList<FeatureData> featureList = new ArrayList<>();
-        String cqlStatementGet = "SELECT * FROM feature WHERE imei = " + imei + ";";
+        String cqlStatementGet = "SELECT * FROM accelerometerdata.feature WHERE imei = " + imei + ";";
         ResultSet rs = session.execute(cqlStatementGet);
         List<Row> listRow = rs.all();
 
@@ -191,7 +191,7 @@ public class DataDAOImpl implements DataDAO {
      */
     @Override
     public void deleteData(int imei) {
-        String cql = "DELETE * FROM accelerometerdata.data WHERE imei = " + imei + ";";
+        String cql = "DELETE FROM accelerometerdata.data WHERE imei = " + imei + ";";
         session.execute(cql);
     }
 
