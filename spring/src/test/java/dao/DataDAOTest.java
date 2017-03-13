@@ -9,9 +9,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
-/**
- * @author nathan
- */
 public class DataDAOTest {
 
     static DataDAOImpl dao;
@@ -20,10 +17,10 @@ public class DataDAOTest {
     @BeforeClass
     public static void beforeTests() {
         dao = new DataDAOImpl();
+        dao.open();
         Assert.notNull(dao);
         dao.createKeyspace();
         Assert.isTrue(dao.keyspaceExists());
-        dao.open();
     }
 
     @Before
@@ -50,7 +47,7 @@ public class DataDAOTest {
     public void testGetUserDataDAO() {
         List<CompleteData> arrayData = dao.getData(500);
         for (int i = 0; i < arrayData.size(); i++) {
-            System.out.println("Données " + i + " : [" + arrayData.get(i).getActivity() + ", " +
+            System.out.println("Data " + i + " : [" + arrayData.get(i).getActivity() + ", " +
                     arrayData.get(i).getImei() + ", " +
                     arrayData.get(i).getTimestamp() + ", " +
                     arrayData.get(i).getHeight() + ", " +
@@ -65,9 +62,9 @@ public class DataDAOTest {
     }
 
     @After
-    public void testDeleteAllDataDAO() {
-        dao.deleteAllData();
-        Assert.isTrue(dao.isEmpty());
+    public void testDeleteDataDAO() {
+        dao.deleteData(500);
+        Assert.isTrue(dao.getData(500).isEmpty());
     }
 
     @AfterClass
