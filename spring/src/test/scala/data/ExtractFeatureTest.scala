@@ -30,11 +30,6 @@ class ExtractFeatureTest extends FunSuite with Matchers with BeforeAndAfterAll {
     feature = new ExtractFeature(data)
   }
 
-  override protected def afterAll(): Unit = {
-    sc.stop()
-  }
-
-
   test("computeAvgAcc") {
     val mean = feature.computeAvgAcc
       .map(x => math.round(x * 100) / 100.0)

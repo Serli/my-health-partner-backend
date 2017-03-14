@@ -26,10 +26,6 @@ class PrepareDataTest extends FunSuite with Matchers with BeforeAndAfterAll {
     lastElement = data.sortBy(time => time, false, 1).first
   }
 
-  override protected def afterAll(): Unit = {
-    sc.stop()
-  }
-
   test("boundariesDiff") {
 
     val result = PrepareData.boundariesDiff(data, firstElement, lastElement)
