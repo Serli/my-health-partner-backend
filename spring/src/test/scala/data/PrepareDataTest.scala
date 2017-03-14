@@ -1,27 +1,24 @@
 package data
 
+import job.SparkContextLoader
 import org.scalatest._
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 class PrepareDataTest extends FunSuite with Matchers with BeforeAndAfterAll {
 
-  var sc: SparkContext = null
+  var sc: SparkContext = _
 
-  var data: RDD[Long] = null
+  var data: RDD[Long] = _
 
   var firstElement: Long = 0
 
   var lastElement: Long = 0
 
   override protected def beforeAll(): Unit = {
-    val conf = new SparkConf()
-      .setAppName("PrepareDataTest")
-      .setMaster("local[*]")
+    sc = SparkContextLoader.sc
 
-    sc = new SparkContext(conf)
-
-    data = sc.textFile("data/test2_ts.csv", 1)
+    data = sc.textFile("resources/test2_ts.csv", 1)
       .map(line => line.toLong)
 
     firstElement = data.sortBy(time => time, true, 1).first
@@ -35,7 +32,7 @@ class PrepareDataTest extends FunSuite with Matchers with BeforeAndAfterAll {
 
   test("boundariesDiff") {
 
-    var result = PrepareData.boundariesDiff(data, firstElement, lastElement)
+    val result = PrepareData.boundariesDiff(data, firstElement, lastElement)
 
     data.count should be(18)
     result.count should be(17)
@@ -56,8 +53,8 @@ class PrepareDataTest extends FunSuite with Matchers with BeforeAndAfterAll {
 
   test("defineJump") {
 
-    var boundariesDiff = PrepareData.boundariesDiff(data, firstElement, lastElement)
-    var result = PrepareData.defineJump(boundariesDiff)
+    val boundariesDiff = PrepareData.boundariesDiff(data, firstElement, lastElement)
+    val result = PrepareData.defineJump(boundariesDiff)
 
     result.count should be(4)
 
@@ -76,9 +73,9 @@ class PrepareDataTest extends FunSuite with Matchers with BeforeAndAfterAll {
 
   test("defineInterval") {
 
-    var boundariesDiff = PrepareData.boundariesDiff(data, firstElement, lastElement)
-    var jump = PrepareData.defineJump(boundariesDiff)
-    var result = PrepareData.defineInterval(jump, firstElement, lastElement, 500)
+    val boundariesDiff = PrepareData.boundariesDiff(data, firstElement, lastElement)
+    val jump = PrepareData.defineJump(boundariesDiff)
+    val result = PrepareData.defineInterval(jump, firstElement, lastElement, 500)
 
     result.size should be(5)
 

@@ -1,33 +1,29 @@
 package data
 
+import job.SparkContextLoader
 import org.scalatest._
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 
 class ExtractFeatureTest extends FunSuite with Matchers with BeforeAndAfterAll {
 
-  var sc: SparkContext = null
+  var sc: SparkContext = _
 
-  var data: RDD[Array[Double]] = null
+  var data: RDD[Array[Double]] = _
 
-  var data_with_ts: RDD[Array[Long]] = null
+  var data_with_ts: RDD[Array[Long]] = _
 
-  var feature: ExtractFeature = null
+  var feature: ExtractFeature = _
 
   override protected def beforeAll(): Unit = {
-    val conf = new SparkConf()
-      .setAppName("ExtractFeatureTest")
-      .setMaster("local[*]")
+    sc = SparkContextLoader.sc
 
-    sc = new SparkContext(conf)
-
-    data = sc.textFile("data/test.csv")
+    data = sc.textFile("resources/test.csv")
       .map(_.split(","))
       .map(x => Array(x(0).toDouble, x(1).toDouble, x(2).toDouble))
 
-    data_with_ts = sc.textFile("data/test_with_ts.csv")
+    data_with_ts = sc.textFile("resources/test_with_ts.csv")
       .map(_.split(","))
       .map(x => Array(x(0).toLong, x(1).toDouble.toLong))
 
@@ -40,7 +36,7 @@ class ExtractFeatureTest extends FunSuite with Matchers with BeforeAndAfterAll {
 
 
   test("computeAvgAcc") {
-    var mean = feature.computeAvgAcc
+    val mean = feature.computeAvgAcc
       .map(x => math.round(x * 100) / 100.0)
 
     mean(0) should be(-5.23)
@@ -49,7 +45,7 @@ class ExtractFeatureTest extends FunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("computeVariance") {
-    var variance = feature.computeVariance
+    val variance = feature.computeVariance
       .map(x => math.round(x * 1000) / 1000.0)
 
     variance(0) should be(0.022)
@@ -58,7 +54,7 @@ class ExtractFeatureTest extends FunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("computeAvgAbsDifference") {
-    var avgAbsDiff = feature.computeAvgAbsDifference()
+    val avgAbsDiff = feature.computeAvgAbsDifference()
       .map(x => math.round(x * 100) / 100.0)
 
     avgAbsDiff(0) should be(0.12)
