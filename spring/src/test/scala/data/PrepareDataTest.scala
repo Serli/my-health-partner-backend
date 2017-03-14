@@ -18,7 +18,7 @@ class PrepareDataTest extends FunSuite with Matchers with BeforeAndAfterAll {
   override protected def beforeAll(): Unit = {
     sc = SparkContextLoader.sc
 
-    data = sc.textFile("resources/test2_ts.csv", 1)
+    data = sc.textFile("src/test/resources/test2_ts.csv", 1)
       .map(line => line.toLong)
 
     firstElement = data.sortBy(time => time, true, 1).first

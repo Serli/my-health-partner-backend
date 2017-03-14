@@ -19,11 +19,11 @@ class ExtractFeatureTest extends FunSuite with Matchers with BeforeAndAfterAll {
   override protected def beforeAll(): Unit = {
     sc = SparkContextLoader.sc
 
-    data = sc.textFile("resources/test.csv")
+    data = sc.textFile("src/test/resources/test.csv")
       .map(_.split(","))
       .map(x => Array(x(0).toDouble, x(1).toDouble, x(2).toDouble))
 
-    data_with_ts = sc.textFile("resources/test_with_ts.csv")
+    data_with_ts = sc.textFile("src/test/resources/test_with_ts.csv")
       .map(_.split(","))
       .map(x => Array(x(0).toLong, x(1).toDouble.toLong))
 
