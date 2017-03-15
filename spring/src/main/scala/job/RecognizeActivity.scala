@@ -1,7 +1,7 @@
 package job
 
 import dao.CompleteData
-import org.apache.spark.mllib.tree.model.DecisionTreeModel
+import org.apache.spark.mllib.tree.model.{DecisionTreeModel, RandomForestModel}
 
 import scala.collection.JavaConverters._
 
@@ -11,12 +11,26 @@ import scala.collection.JavaConverters._
 object RecognizeActivity {
 
   /**
-    * Recognize an activity from a java List of CompleteData and a model.
+    * Recognize an activity from a java List of CompleteData and a DecisionTreeModel.
     * @param dataJavaList the list of CompleteData to recognize
     * @param model the ML model
     * @return the List of the activity recognized
     */
   def recognizeActivity(dataJavaList: java.util.List[CompleteData], model: DecisionTreeModel): java.util.List[java.lang.Long] = {
+    val features = ComputeFeature.getFeatureFromJava(dataJavaList)
+
+    features.map(f => model.predict(f).toLong.asInstanceOf[java.lang.Long])
+      .collect
+      .toList.asJava
+  }
+
+  /**
+    * Recognize an activity from a java List of CompleteData and a RandomForestModel.
+    * @param dataJavaList the list of CompleteData to recognize
+    * @param model the ML model
+    * @return the List of the activity recognized
+    */
+  def recognizeActivity(dataJavaList: java.util.List[CompleteData], model: RandomForestModel): java.util.List[java.lang.Long] = {
     val features = ComputeFeature.getFeatureFromJava(dataJavaList)
 
     features.map(f => model.predict(f).toLong.asInstanceOf[java.lang.Long])

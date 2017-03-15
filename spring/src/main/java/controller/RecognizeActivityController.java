@@ -2,6 +2,7 @@ package controller;
 
 import job.CreateModel;
 import job.RecognizeActivity;
+import org.apache.spark.mllib.tree.model.RandomForestModel;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,24 +28,8 @@ import org.apache.spark.mllib.tree.model.DecisionTreeModel;
 @RequestMapping("/recognize")
 public class RecognizeActivityController {
 
-    private static DecisionTreeModel model = loadModel();
-
-    /**
-     * Load the stored model at start if it exits build it if none was stored.
-     * @return the MLlib model
-     */
-    private static DecisionTreeModel loadModel() {
-        DecisionTreeModel m = null;
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream("/data/model/DecisionTree.model"));
-            m = (DecisionTreeModel) ois.readObject();
-        } catch (IOException e) {
-            m = CreateModel.createModel();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return m;
-    }
+    private static DecisionTreeModel decisionTreeModel = loadDecisionTreeModel();
+    private static RandomForestModel randomForestModel = loadRandomForestModel();
 
     /**
      * Handle a post request on /recognize.
@@ -55,18 +40,53 @@ public class RecognizeActivityController {
      */
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public List<Long> recognizeActivity(@RequestBody @Valid List<CompleteData> completeData) {
-        if (model == null)
-            model = loadModel();
-        if (model != null)
-            return RecognizeActivity.recognizeActivity(completeData, model);
+        if (randomForestModel == null)
+            randomForestModel = loadRandomForestModel();
+        if (randomForestModel != null)
+            return RecognizeActivity.recognizeActivity(completeData, randomForestModel);
         return null;
     }
 
     /**
-     * Update the existing model.
+     * Update the existing models.
      */
     public static void updateModel() {
-        model = CreateModel.createModel();
+        randomForestModel = CreateModel.createRandomForestModel();
+        decisionTreeModel = CreateModel.createDecisionTreeModel();
+    }
+
+    /**
+     * Load the stored {@link RandomForestModel} at start if it exits, build it if none was stored.
+     * @return the MLlib model
+     */
+    private static RandomForestModel loadRandomForestModel() {
+        RandomForestModel m = null;
+        try {
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream("/data/model/RandomForest.model"));
+            m = (RandomForestModel) ois.readObject();
+        } catch (IOException e) {
+            m = CreateModel.createRandomForestModel();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return m;
+    }
+
+    /**
+     * Load the stored {@link DecisionTreeModel} at start if it exits, build it if none was stored.
+     * @return the MLlib model
+     */
+    private static DecisionTreeModel loadDecisionTreeModel() {
+        DecisionTreeModel m = null;
+        try {
+             ObjectInputStream ois = new ObjectInputStream(new FileInputStream("/data/model/DecisionTree.model"));
+             m = (DecisionTreeModel) ois.readObject();
+        } catch (IOException e) {
+            m = CreateModel.createDecisionTreeModel();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return m;
     }
 
 }

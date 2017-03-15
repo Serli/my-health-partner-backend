@@ -3,10 +3,11 @@ package job
 import data.PrepareData
 import model.{DecisionTrees, RandomForests}
 import com.datastax.spark.connector._
+import com.datastax.spark.connector.rdd.CassandraTableScanRDD
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.mllib.tree.model.DecisionTreeModel
+import org.apache.spark.mllib.tree.model.{DecisionTreeModel, RandomForestModel}
 
 /**
   * Create a MLlib model from the database data.
@@ -14,43 +15,100 @@ import org.apache.spark.mllib.tree.model.DecisionTreeModel
 object CreateModel {
 
   /**
-    * Create a MLlib model from the feature data.
+    * Create a RandomForestModel from the feature data.
     * If no feature data was found, try to create it from raw accelerometer data instead.
     *
     * @return The model created
     */
-  def createModel() = {
-    val sc = SparkContextLoader.sc
-
-    val cassandraRDD = sc.cassandraTable("accelerometerdata", "feature")
-
-    val labeledPoints = cassandraRDD.select("activity", "mean_x", "mean_y", "mean_z", "variance_x", "variance_y", "variance_z", "avg_abs_diff_x", "avg_abs_diff_y", "avg_abs_diff_z", "resultant", "avg_time_peak")
-      .map(entry => (entry.getLong("activity"), Vectors.dense(Array(entry.getDouble("mean_x"), entry.getDouble("mean_y"), entry.getDouble("mean_z"), entry.getDouble("variance_x"), entry.getDouble("variance_y"), entry.getDouble("variance_z"), entry.getDouble("avg_abs_diff_x"), entry.getDouble("avg_abs_diff_y"), entry.getDouble("avg_abs_diff_z"), entry.getDouble("resultant"), entry.getDouble("avg_time_peak")))))
-      .map(entry => getLabeledPoint(entry._1, entry._2))
-
-    var result: DecisionTreeModel = null
-
-    if (labeledPoints.count() > 0) {
-      result = new DecisionTrees(labeledPoints).createModel()
-      //result = new RandomForests(labeledPoints).createModel()
-    }
-    else {
-      result = createModelFromRaw()
-    }
+  def createRandomForestModel() : RandomForestModel = {
+    val labeledPoints = loadFeatureData()
+    var result : RandomForestModel = null
+    if (labeledPoints.count() > 0)
+      result = new RandomForests(labeledPoints).createModel()
+    else
+      result = createRandomForestModelFromRaw()
 
     result
   }
 
   /**
-    * Create a MLlib model from the raw accelerometer data.
+    * Create a DecisionTreeModel from the feature data.
+    * If no feature data was found, try to create it from raw accelerometer data instead.
     *
     * @return The model created
     */
-  def createModelFromRaw() = {
-    val sc = SparkContextLoader.sc
+  def createDecisionTreeModel() : DecisionTreeModel = {
+    val labeledPoints = loadFeatureData()
+    var result : DecisionTreeModel = null
+    if (labeledPoints.count() > 0)
+      result = new DecisionTrees(labeledPoints).createModel()
+    else
+      result = createDecisionTreeModelFromRaw()
 
-    val cassandraRowsRDD = sc.cassandraTable("accelerometerdata", "data")
+    result
+  }
 
+  /**
+    * Create a RandomForestModel from the raw accelerometer data.
+    *
+    * @return The model created
+    */
+  def createRandomForestModelFromRaw() : RandomForestModel = {
+    val cassandraRowsRDD = loadRawData()
+    val labeledPoints = computeFeaturesFromRaw(cassandraRowsRDD)
+    var randomForests : RandomForestModel = null
+    if (labeledPoints.nonEmpty) {
+      val trainingData = SparkContextLoader.sc.parallelize(labeledPoints)
+      randomForests = new RandomForests(trainingData).createModel()
+    }
+    randomForests
+  }
+
+  /**
+    * Create a DecisionTreeModel from the raw accelerometer data.
+    *
+    * @return The model created
+    */
+  def createDecisionTreeModelFromRaw() : DecisionTreeModel = {
+    val cassandraRowsRDD = loadRawData()
+    val labeledPoints = computeFeaturesFromRaw(cassandraRowsRDD)
+    var decisionTrees: DecisionTreeModel = null
+    if (labeledPoints.nonEmpty) {
+      val trainingData = SparkContextLoader.sc.parallelize(labeledPoints)
+      decisionTrees = new DecisionTrees(trainingData).createModel()
+    }
+    decisionTrees
+  }
+
+  /**
+    * Load the feature data stored in the database.
+    *
+    * @return the feature data stored
+    */
+  def loadFeatureData(): RDD[LabeledPoint] = {
+    val cassandraRDD = SparkContextLoader.sc.cassandraTable("accelerometerdata", "feature")
+
+    cassandraRDD.select("activity", "mean_x", "mean_y", "mean_z", "variance_x", "variance_y", "variance_z", "avg_abs_diff_x", "avg_abs_diff_y", "avg_abs_diff_z", "resultant", "avg_time_peak")
+      .map(entry => (entry.getLong("activity"), Vectors.dense(Array(entry.getDouble("mean_x"), entry.getDouble("mean_y"), entry.getDouble("mean_z"), entry.getDouble("variance_x"), entry.getDouble("variance_y"), entry.getDouble("variance_z"), entry.getDouble("avg_abs_diff_x"), entry.getDouble("avg_abs_diff_y"), entry.getDouble("avg_abs_diff_z"), entry.getDouble("resultant"), entry.getDouble("avg_time_peak")))))
+      .map(entry => getLabeledPoint(entry._1, entry._2))
+  }
+
+  /**
+    * Load the raw accelerometer data stored in the database.
+    *
+    * @return the raw accelerometer data stored
+    */
+  def loadRawData(): CassandraTableScanRDD[CassandraRow] = {
+    SparkContextLoader.sc.cassandraTable("accelerometerdata", "data")
+  }
+
+  /**
+    * Extract the features from the raw accelerometer data.
+    *
+    * @param cassandraRowsRDD the raw accelerometer data
+    * @return the features computed
+    */
+  def computeFeaturesFromRaw(cassandraRowsRDD : CassandraTableScanRDD[CassandraRow]): List[LabeledPoint] = {
     var labeledPoints: List[LabeledPoint] = List()
 
     val userIds = cassandraRowsRDD.select("imei")
@@ -102,20 +160,7 @@ object CreateModel {
         }
       }
     }
-
-    var decisionTrees: DecisionTreeModel = null
-    // var randomForests : RandomForests
-
-    if (labeledPoints.nonEmpty) {
-
-      val trainingData = sc.parallelize(labeledPoints)
-
-      decisionTrees = new DecisionTrees(trainingData).createModel()
-      // randomForests = new RandomForests(trainingData).createModel()
-
-    }
-
-    decisionTrees
+    labeledPoints
   }
 
   /**
