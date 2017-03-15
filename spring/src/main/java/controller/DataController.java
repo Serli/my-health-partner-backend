@@ -1,8 +1,10 @@
 package controller;
 
+import dao.DataDAO;
 import dao.DataDAOImpl;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.validation.Valid;
 
 import dao.CompleteData;
@@ -24,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/data")
 public class DataController {
 
-    private static int cpt = 0;
+    private static AtomicInteger cpt = new AtomicInteger(0);
 
-    private final DataDAOImpl dao = new DataDAOImpl();
+    private final DataDAO dao = new DataDAOImpl();
 
     /**
      * Handle a post request on /data.
@@ -37,18 +39,15 @@ public class DataController {
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public void insertData(@RequestBody @Valid List<CompleteData> completeData) {
         dao.open();
-        for (int i = 0; i < completeData.size(); i++) {
-            dao.addDataEntry(completeData.get(i));
-        }
+
+        completeData.forEach(dao::addDataEntry);
         List<FeatureData> features = ComputeFeature.getJavaFeature(completeData);
-        for (FeatureData feature : features) {
-            dao.addFeatureEntry(feature);
-            cpt++;
-        }
-        dao.close();
-        if (cpt > 200) {
+        features.forEach(dao::addFeatureEntry);
+        if (cpt.updateAndGet(n -> n + features.size()) > 100) {
             RecognizeActivityController.updateModel();
-            cpt = 0;
+            cpt.set(0);
         }
+
+        dao.close();
     }
 }
