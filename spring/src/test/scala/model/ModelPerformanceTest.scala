@@ -40,6 +40,7 @@ class ModelPerformanceTest extends FunSuite with Matchers with BeforeAndAfterAll
       error += e
     }
     error /= 25
+    println("Sample size : " + data.count)
     println("Average error : " + error*100 + "%")
     println("Minimal error : " + errorMin * 100 + "%")
     println("Maximal error : " + errorMax * 100 + "%")
@@ -66,6 +67,7 @@ class ModelPerformanceTest extends FunSuite with Matchers with BeforeAndAfterAll
       error += e
     }
     error /= 25
+    println("Sample size : " + data.count)
     println("Average error : " + error*100.0 + "%")
     println("Minimal error : " + errorMin * 100 + "%")
     println("Maximal error : " + errorMax * 100 + "%")
