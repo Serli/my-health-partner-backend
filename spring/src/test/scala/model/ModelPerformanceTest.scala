@@ -23,6 +23,8 @@ class ModelPerformanceTest extends FunSuite with Matchers with BeforeAndAfterAll
 
   test("RandomForestsTest") {
     var error : Double = 0
+    var errorMax : Double = 0
+    var errorMin : Double = 100
     for(_ <- 1 to 25) {
       val splits = data.randomSplit(Array(0.5, 0.5))
       val training = splits(0)
@@ -33,15 +35,22 @@ class ModelPerformanceTest extends FunSuite with Matchers with BeforeAndAfterAll
                    .count()
                    .toDouble
       e /= test.count().toDouble
+      if(e>errorMax) errorMax = e
+      if(e<errorMin) errorMin = e
       error += e
     }
     error /= 25
-    println("Average error : " + error*100.0 + "%")
+    println("Average error : " + error*100 + "%")
+    println("Minimal error : " + errorMin * 100 + "%")
+    println("Maximal error : " + errorMax * 100 + "%")
     assert(error < 0.1, "Average error should be < 10%")
+    assert(errorMax < 0.15, "Maximal error should be < 15%")
   }
 
   test("DecisionTreesTest") {
     var error : Double = 0
+    var errorMax : Double = 0
+    var errorMin : Double = 100
     for(_ <- 1 to 25) {
       val splits = data.randomSplit(Array(0.5, 0.5))
       val training = splits(0)
@@ -52,11 +61,16 @@ class ModelPerformanceTest extends FunSuite with Matchers with BeforeAndAfterAll
         .count()
         .toDouble
       e /= test.count().toDouble
+      if(e>errorMax) errorMax = e
+      if(e<errorMin) errorMin = e
       error += e
     }
     error /= 25
     println("Average error : " + error*100.0 + "%")
+    println("Minimal error : " + errorMin * 100 + "%")
+    println("Maximal error : " + errorMax * 100 + "%")
     assert(error < 0.1, "Average error should be < 10%")
+    assert(errorMax < 0.15, "Maximal error should be < 15%")
   }
 
 }
