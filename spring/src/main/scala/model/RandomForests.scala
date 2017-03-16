@@ -18,7 +18,7 @@ class RandomForests(trainingData: RDD[LabeledPoint]) {
   def createModel() = {
     val categoricalFeaturesInfo: Map[Int, Int] = Map()
     val numTrees = 10
-    val numClasses = 6
+    val numClasses = 3
     val featureSubsetStrategy = "auto"
     val impurity = "gini"
     val maxDepth = 9

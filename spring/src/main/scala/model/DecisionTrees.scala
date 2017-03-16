@@ -17,7 +17,7 @@ class DecisionTrees(trainingData: RDD[LabeledPoint]) {
     */
   def createModel() = {
     val categoricalFeaturesInfo: Map[Int, Int] = Map()
-    val numClasses = 6
+    val numClasses = 3
     val impurity = "gini"
     val maxDepth = 9
     val maxBins = 32
